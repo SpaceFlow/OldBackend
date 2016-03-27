@@ -1,16 +1,15 @@
 // Das hier ist das wichtigste Script im Netzwerk!
 // Wenn dieses nicht mit genügend Integrität und stabilität Arbeitet rasselt das komplette System weg!
 // Für weitere Informationen hierzu sehe man im Battleplan nach
-var app = require('http').createServer(handler)
+var app = require('http').createServer(handler);
 var iosocket = require('socket.io')(app);
-var fs = require('fs');
 
 app.listen(8081);
 Array.prototype.unset = function(value) {
     if(this.indexOf(value) != -1) { // Make sure the value exists
         this.splice(this.indexOf(value), 1);
     }   
-}
+};
 function handler (req, res) {
     res.writeHead(200);
     res.end(JSON.stringify(pools));
@@ -31,7 +30,33 @@ var fs = require("fs"),
     nodetimer = {},
     pingcache = {};
 
+process.stdin.setEncoding('utf8');
+process.stdin.on('readable', function() {
+    var chunk = process.stdin.read();
+    if (chunk !== null) {
+        chunk = chunk.toLowerCase();
+        var splitInput = chunk.split(" ");
+        chunk = chunk.replace("\r\n", "");
+        if (chunk == "list") {
+            console.log(pools);
+        } else if (splitInput[0] == "assign")
 
+            if (pools["undefined"].indexOf(splitInput[1]) !== -1 && pools[splitInput[2]] !== undefined) { // Checken ob Adresse valide ist
+                console.log("Vaild");
+                pools["undefined"].unset(splitInput[1]);
+                pools[splitInput[2]].push(splitInput[1]);
+                console.log("ok");
+            } else {
+                console.log("Invalid");
+            }
+        } else if (splitInput[0] == "move") {
+            if (pools[splitInput[2]].indexOf(splitInput[1]) !== -1 && pools[splitInput[3]] !== undefined) { // Checken ob Adresse valide ist
+                pools[splitInput[2]].unset(splitInput[1]);
+                pools[splitInput[3]].push(splitInput[1]);
+                console.log("ok");
+            }
+        }
+    });
 util.log("Start listening");
 iosocket.on("connection", function(socket) {
     var thisid = undefined,
@@ -45,17 +70,16 @@ iosocket.on("connection", function(socket) {
         var answer = {
             id: thisid,
             job: undefined
-        }
+        };
         pools[answer.job].push(socket.handshake.address.replace("::ffff:", "")  + ":" + clientoptions.port);
         iosocket.emit("poolupdate", JSON.stringify(pools));
         pingcache[thisid] = true;
-        socket.emit("task", JSON.stringify(answer))
+        socket.emit("task", JSON.stringify(answer));
         // Pingtimer starten um aktive Clients zu finden
         
         nodetimer[thisid] = setInterval(function() {
             if (pingcache[thisid]) {
                 // Client alive! \o/
-                util.log("Got ping from Client " + thisid);
                 if (!timeout) {
                 pingcache[thisid] = false;
             

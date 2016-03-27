@@ -59,18 +59,17 @@ ioclient.on("task", function(data) {
         
         
     })
-})
+});
 app.get('/', function(req, res) { 
     
     
 });
 process.stdin.setEncoding('utf8');
-
-process.stdin.on('readable', () => {
-  var chunk = process.stdin.read();
-  if (chunk !== null) {
-    eval(chunk);
-  }
+process.stdin.on('readable', function() {
+    var chunk = process.stdin.read();
+if (chunk !== null) {
+    eval(chunk)
+}
 });
 function getPools(callback) {
     request(loadserveradress, function (error, response, body) {
